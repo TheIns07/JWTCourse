@@ -23,6 +23,7 @@ namespace JWTCourse.Controllers
             user.PasswordSalt = passwordSalt;
             user.PasswordHash = passwordHash;
             user.Username = res.Username;
+            user.TypeOfUser = res.TypeOfUser;
             return Ok(user);
         }
 
@@ -37,7 +38,7 @@ namespace JWTCourse.Controllers
             if (VerifyPasswordHash(userLog.Password, user.PasswordHash, user.PasswordSalt)!= true) { 
                 return BadRequest();
             }
-                
+            
             string token = CreateToken(user);
 
             return Ok(token);
@@ -45,9 +46,17 @@ namespace JWTCourse.Controllers
 
         private string CreateToken(User user)
         {
-            List<Claim> claims = new List<Claim> { 
-                new Claim(ClaimTypes.Name, user.Username)
+            List<Claim> claims = new List<Claim> {
+                new Claim(ClaimTypes.Name, user.Username),
             };
+
+            if (user.TypeOfUser == 1)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, "Admin"));
+            }
+
+            claims.Add(new Claim(ClaimTypes.Role, "Noob"));
+
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.GetSection("AppSettings:Token").Value));
 
             var credential = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
